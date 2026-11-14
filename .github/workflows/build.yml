@@ -7,8 +7,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
-        run: unzip -q MaterialYouKeyboard.zip
+        with:
+          fetch-depth: 0
+      - name: Unzip newest project zip
+        run: |
+          best=""
+          bt=0
+          while IFS= read -r f; do
+            t=$(git log -1 --format=%ct -- "$f")
+            t=${t:-0}
+            if [ "$t" -ge "$bt" ]; then
+              bt=$t
+              best="$f"
+            fi
+          done < <(find . -type f -iname 'MaterialYouKeyboard*.zip' -not -path './.git/*')
+          echo "Using: $best"
+          test -n "$best"
+          unzip -qo "$best"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
